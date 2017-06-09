@@ -1,20 +1,15 @@
 
 /*
-
   It connects to an MQTT server then:
   - on 0 switches off relay
   - on 1 switches on relay
   - on 2 switches the state of the relay
-
   - sends 0 on off relay
   - sends 1 on on relay
-
   It will reconnect to the server if the connection is lost using a blocking
   reconnect function. See the 'mqtt_reconnect_nonblocking' example for how to
   achieve the same result without blocking the main loop.
-
   The current state is stored in EEPROM and restored on bootup
-
 */
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -22,8 +17,12 @@
 #include <PubSubClient.h>
 #include <Bounce2.h>
 #include <EEPROM.h>
+#include <NewPing.h>
 
-
+#define TRIGGER_PIN  12  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     14  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
 const char* ssid = "adsl";
 const char* password = "ITGeeks123";
 const char* mqtt_server = "10.0.0.8";
@@ -45,6 +44,7 @@ const char* outTopic = "/LivingRoom/LED/1";
 const char* inTopic = "/LivingRoom/LED/1";
 const char* outTopic1 = "/LivingRoom/light";
 const char* outTopic2 = "/LivingRoom/temp";
+const char* outTopic3 = "/LivingRoom/dept";
 int relay_pin = 16;
 int button_pin = 5;
 bool relayState = LOW;
@@ -176,6 +176,10 @@ void writeLight() {
     Serial.print("temp: ");    
     Serial.println(temp);
     client.publish(outTopic2, String(temp).c_str(), true);
+    int dept = sonar.ping_cm();
+    Serial.print("dept: ");    
+    Serial.println(dept);
+    client.publish(outTopic3, String(dept).c_str(), true);
   }
 }
 
